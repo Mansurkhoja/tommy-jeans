@@ -70,7 +70,7 @@ export default {
       transfromRotate: '',
       zoom: false,
       boxImages: 'box-images',
-      // isVisible: false,
+      isTouchable: false,
     };
   },
   components: {
@@ -78,28 +78,40 @@ export default {
   },
   methods: {
     mouseMoveImg(e) {
-      const box = document.querySelector('.item-images').getBoundingClientRect();
-      const mouseX = e.clientX - box.left;
-      const mouseY = e.clientY - box.top;
-      this.xPercent = (mouseX / box.width) * 100;
-      this.yPercent = (mouseY / box.height) * 100;
-      this.transfromOrigin = `transform-origin:${this.xPercent}%${this.yPercent}%`;
-      const x = mouseX - box.width / 2;
-      const y = mouseY - box.height / 2;
-      const xPourcent = (x * 100) / box.width / 10;
-      const yPourcent = (y * 100) / box.height / 10;
-      this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+      if (!this.isTouchable) {
+        const box = document.querySelector('.item-images').getBoundingClientRect();
+        const mouseX = e.clientX - box.left;
+        const mouseY = e.clientY - box.top;
+        this.xPercent = (mouseX / box.width) * 100;
+        this.yPercent = (mouseY / box.height) * 100;
+        this.transfromOrigin = `transform-origin:${this.xPercent}%${this.yPercent}%`;
+        const x = mouseX - box.width / 2;
+        const y = mouseY - box.height / 2;
+        const xPourcent = (x * 100) / box.width / 10;
+        const yPourcent = (y * 100) / box.height / 10;
+        this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+      }
     },
     scale() {
-      this.zoom = true;
+      if (!this.isTouchable) {
+        this.zoom = true;
+      }
     },
     unscale() {
-      this.zoom = false;
-      this.transfromRotate = '';
-      this.transfromOrigin = '';
+      if (!this.isTouchable) {
+        this.zoom = false;
+        this.transfromRotate = '';
+        this.transfromOrigin = '';
+      }
     },
   },
-
+  created() {
+    if ('ontouchstart' in document.documentElement) {
+      this.isTouchable = true;
+    } else {
+      this.isTouchable = false;
+    }
+  },
 };
 </script>
 
@@ -131,7 +143,7 @@ export default {
     font-size: $fs-big;
     line-height: 1;
     opacity: 0;
-    animation: opacity 2s 0s 1 linear forwards;
+    animation: opacity 2.3s 0s 1 linear forwards;
 }
 .item-images{
   flex: 0 0 50%;
@@ -151,6 +163,7 @@ export default {
   bottom: 0;
   left: 0;
   font-size: 13.5vh;
+  z-index: 98;
   color: transparent;
   -webkit-text-stroke: $red-base;
   -webkit-text-stroke-width: 2px;

@@ -83,6 +83,7 @@ export default {
       transfromRotate: '',
       zoom: false,
       boxImages: 'box-images',
+      isTouchable: false,
     };
   },
   components: {
@@ -90,25 +91,31 @@ export default {
   },
   methods: {
     mouseMoveImg(e) {
-      const box = document.querySelector('.item-images--even').getBoundingClientRect();
-      const mouseX = e.clientX - box.left;
-      const mouseY = e.clientY - box.top;
-      this.xPercent = (mouseX / box.width) * 100;
-      this.yPercent = (mouseY / box.height) * 100;
-      this.transfromOrigin = `transform-origin:${this.xPercent}%${this.yPercent}%`;
-      const x = mouseX - box.width / 2;
-      const y = mouseY - box.height / 2;
-      const xPourcent = (x * 100) / box.width / 10;
-      const yPourcent = (y * 100) / box.height / 10;
-      this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+      if (!this.isTouchable) {
+        const box = document.querySelector('.item-images--even').getBoundingClientRect();
+        const mouseX = e.clientX - box.left;
+        const mouseY = e.clientY - box.top;
+        this.xPercent = (mouseX / box.width) * 100;
+        this.yPercent = (mouseY / box.height) * 100;
+        this.transfromOrigin = `transform-origin:${this.xPercent}%${this.yPercent}%`;
+        const x = mouseX - box.width / 2;
+        const y = mouseY - box.height / 2;
+        const xPourcent = (x * 100) / box.width / 10;
+        const yPourcent = (y * 100) / box.height / 10;
+        this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+      }
     },
     scale() {
-      this.zoom = true;
+      if (!this.isTouchable) {
+        this.zoom = true;
+      }
     },
     unscale() {
-      this.zoom = false;
-      this.transfromRotate = '';
-      this.transfromOrigin = '';
+      if (!this.isTouchable) {
+        this.zoom = false;
+        this.transfromRotate = '';
+        this.transfromOrigin = '';
+      }
     },
     // wScroll() {
     //   const pos = document.querySelector('.item-text').getBoundingClientRect();
@@ -131,6 +138,13 @@ export default {
   // unmounted() {
   //   window.removeEventListener('scroll', this.wScroll);
   // },
+  created() {
+    if ('ontouchstart' in document.documentElement) {
+      this.isTouchable = true;
+    } else {
+      this.isTouchable = false;
+    }
+  },
 };
 </script>
 
