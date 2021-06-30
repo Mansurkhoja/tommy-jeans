@@ -27,13 +27,11 @@
     <div class="item-images"
     @mouseenter="scale"
     @mouseleave="unscale"
-    @mousemove="mouseMoveImg"
-    :class="{'zoom' : zoom}"
     >
-      <div class="item-image__container" :style="transfromRotate">
+      <div class="item-image__container" @mousemove="mouseMoveImg" :style="transformImageContainer">
         <div class="item-image" >
           <div class="item-image__inner"
-              :style="transfromOrigin">
+              >
             <img
               alt="Tommy Jeans logo"
               src="@/assets/img/man-1.jpg"
@@ -42,7 +40,7 @@
         </div>
       <div class="item-image">
         <div class="item-image__inner"
-              :style="transfromOrigin">
+              >
             <img
               alt="Tommy Jeans logo"
               src="@/assets/img/man-2.jpg"
@@ -50,10 +48,13 @@
           </div>
         </div>
       </div>
-      <div class="item-images__text">
-        МЕТРОПОЛИС
+      <div class="item-images__text" :class="{'show-curs': cursoractive}"
+       @mousemove="qw" data-text="МЕТРОПОЛИС">
+        <span @mouseover="cursorShow" @mouseout="cursorHide">МЕТРОПОЛИС</span>
       </div>
     </div>
+    <!-- <div class="cursor" :style="s">
+    </div> -->
   </div>
 </template>
 
@@ -66,11 +67,14 @@ export default {
     return {
       xPercent: '',
       yPercent: '',
-      transfromOrigin: '',
-      transfromRotate: '',
-      zoom: false,
+      transformImageContainer: '',
+      // zoom: false,
       boxImages: 'box-images',
       isTouchable: false,
+      xpos: 0,
+      ypos: 0,
+      poscurs: '',
+      cursoractive: false,
     };
   },
   components: {
@@ -82,26 +86,37 @@ export default {
         const box = document.querySelector('.item-images').getBoundingClientRect();
         const mouseX = e.clientX - box.left;
         const mouseY = e.clientY - box.top;
-        this.xPercent = (mouseX / box.width) * 100;
-        this.yPercent = (mouseY / box.height) * 100;
-        this.transfromOrigin = `transform-origin:${this.xPercent}%${this.yPercent}%`;
         const x = mouseX - box.width / 2;
         const y = mouseY - box.height / 2;
         const xPourcent = (x * 100) / box.width / 10;
         const yPourcent = (y * 100) / box.height / 10;
-        this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+        this.transformImageContainer = `transform: translateX(${-yPourcent}%) translateY(${xPourcent}%)`;
       }
     },
-    scale() {
+    qw(w) {
       if (!this.isTouchable) {
-        this.zoom = true;
+        this.xpos = w.clientY;
+        this.ypos = w.clientX;
+        const h = document.querySelector('.item-images__text');
+        const p = h.getBoundingClientRect();
+        const d = p.width * 0.6;
+        const rr = (Math.atan2(p.height, p.width * (180 / Math.PI)));
+        console.log(rr);
+        h.style.setProperty('--x', `${((w.clientY + p.top) - d)}px`);
+        h.style.setProperty('--y', `${((w.clientX - p.left) + d) / 2}px`);
       }
+    },
+    cursorShow() {
+      this.cursoractive = true;
+    },
+    cursorHide() {
+      this.cursoractive = false;
     },
     unscale() {
       if (!this.isTouchable) {
-        this.zoom = false;
-        this.transfromRotate = '';
-        this.transfromOrigin = '';
+        // this.zoom = false;
+        this.transformImageContainer = '';
+        // this.transfromOrigin = '';
       }
     },
   },
@@ -112,11 +127,85 @@ export default {
       this.isTouchable = false;
     }
   },
+  computed: {
+    s: function () {
+      return `transform: translate(calc(${this.ypos}px - 50%), calc(${this.xpos}px - 50%));`;
+      // transform: translate(96px, 192px);
+      // return `top:${this.xpos}px; left:${this.ypos}px;`;
+      // this.poscurs = `top:${e.clientY}px; left:${e.clientX}px;`;
+    },
+    // textCursorOut: function () {
+    //   return this.cursoractive === 'false';
+    // },
+    // textCursor: function () {
+    //   return this.cursoractive === 'true';
+    // },
+  },
 };
 </script>
 
 <style lang="scss">
 @import '@/assets/scss/_vars.scss';
+.cursor{
+  position: fixed;
+  //transform: translate(-50%, -50%);
+  width: 26vh;
+  height: 26vh;
+  // margin-top: -10vh;
+  // margin-left: -10vh;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba($color: $red-base, $alpha: .5);
+  border: 2px dashed $color-base;
+  // mix-blend-mode: difference;
+  // mix-blend-mode: screen;
+  opacity: 1;
+  transition: opacity .15s linear, background-color .3s linear;
+  &.show-curs{
+      opacity: 1;
+      transform: scale(1);
+     // background-color: rgba($color: $red-base, $alpha: 1);
+  }
+}
+.item-images__text{
+  display: inline-flex;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 13.5vh;
+  z-index: 98;
+  color: transparent;
+  -webkit-text-stroke: $red-base;
+  -webkit-text-stroke-width: 2px;
+  transform: rotate(-90deg) translateY(60%);
+  line-height: 1;
+  transform-origin: bottom left;
+  user-select: none;
+  cursor: none;
+  &::after{
+    content: attr(data-text);
+    // content: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: $red-base;
+    pointer-events: none;
+    // clip-path: circle(20px at var(--x, -100%) var(--y, -100%));
+    clip-path: circle(13vh at var(--x, -100%) var(--y, -100%));
+    background-color: rgba($color: $color-base, $alpha: .5);
+    box-shadow: 0 0 0vh 26vh rgba($color: $color-base, $alpha: .5);
+    transition: opacity .2s linear;
+    opacity: 0;
+  }
+  &.show-curs{
+    &::after{
+    //  content: attr(data-text);
+    opacity: 1;
+    }
+  }
+}
 .logo {
     width: 10vw;
     margin-bottom: auto;
@@ -129,6 +218,7 @@ export default {
   height: $fullHeight;
   min-height: $minHeight;
   overflow: hidden;
+  background: #ffffff82;
 }
 .item{
   flex: 0 0 50%;
@@ -158,26 +248,15 @@ export default {
   // align-items: center;
   // transition: transform .1s linear;
 }
-.item-images__text{
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  font-size: 13.5vh;
-  z-index: 98;
-  color: transparent;
-  -webkit-text-stroke: $red-base;
-  -webkit-text-stroke-width: 2px;
-  transform: rotate(-90deg) translateY(60%);
-  line-height: 1;
-  transform-origin: bottom left;
-  user-select: none;
-}
+
 .item-image__container{
   display: flex;
   align-items: center;
   height: 100%;
   width: 100%;
-  // transition: transform .1s linear, box-shadow .1s linear;
+      box-shadow: 0 0 20px 5px transparent;
+      backface-visibility: hidden;
+  transition: transform .1s linear;
 }
 .item-image{
   width: 65%;

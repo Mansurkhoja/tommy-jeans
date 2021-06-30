@@ -12,8 +12,6 @@
     <div class="item-images item-images--even"
     @mouseenter="scale"
     @mouseleave="unscale"
-    @mousemove="mouseMoveImg"
-    :class="{'zoom' : zoom}"
     >
       <!-- <div class="item-image"
           :style="{backgroundImage: 'url(' + require('@/assets/img/man-1.jpg') + ')'}">
@@ -21,10 +19,9 @@
      <div class="item-image"
           :style="{backgroundImage: 'url(' + require('@/assets/img/man-2.jpg') + ')'}">
       </div> -->
-      <div class="item-image__container" :style="transfromRotate">
+      <div class="item-image__container" @mousemove="mouseMoveImg" :style="transformImageContainer">
         <div class="item-image" >
-          <div class="item-image__inner"
-              :style="transfromOrigin">
+          <div class="item-image__inner">
             <img
               alt="Tommy Jeans logo"
               src="@/assets/img/girl-1.jpg"
@@ -32,8 +29,7 @@
           </div>
         </div>
       <div class="item-image">
-        <div class="item-image__inner"
-              :style="transfromOrigin">
+        <div class="item-image__inner">
             <img
               alt="Tommy Jeans logo"
               src="@/assets/img/girl-2.jpg"
@@ -41,8 +37,9 @@
           </div>
         </div>
       </div>
-      <div class="item-images__text">
-        Tommy Jeans
+      <div class="item-images__text item-images__text--even" :class="{'show-curs': cursoractive}"
+       @mousemove="qw"  data-text="Tommy Jeans">
+        <span @mouseover="cursorShow" @mouseout="cursorHide">Tommy Jeans</span>
       </div>
     </div>
     <div class="item">
@@ -79,11 +76,15 @@ export default {
     return {
       xPercent: '',
       yPercent: '',
-      transfromOrigin: '',
+      transformImageContainer: '',
       transfromRotate: '',
       zoom: false,
       boxImages: 'box-images',
       isTouchable: false,
+      xpos: 0,
+      ypos: 0,
+      poscurs: '',
+      cursoractive: false,
     };
   },
   components: {
@@ -102,19 +103,33 @@ export default {
         const y = mouseY - box.height / 2;
         const xPourcent = (x * 100) / box.width / 10;
         const yPourcent = (y * 100) / box.height / 10;
-        this.transfromRotate = `transform: rotateX(${-yPourcent}deg) rotateY(${xPourcent}deg)`;
+        this.transformImageContainer = `transform: translateX(${-yPourcent}%) translateY(${xPourcent}%)`;
       }
     },
-    scale() {
+    qw(w) {
       if (!this.isTouchable) {
-        this.zoom = true;
+        this.xpos = w.clientY;
+        this.ypos = w.clientX;
+        const h = document.querySelector('.item-images__text--even');
+        const p = h.getBoundingClientRect();
+        const d = p.width * 0.6;
+        const rr = (Math.atan2(p.height, p.width * (180 / Math.PI)));
+        console.log(rr);
+        h.style.setProperty('--xx', `${((w.clientY + p.top) - d)}px`);
+        h.style.setProperty('--yy', `${((w.clientX - p.left) + d) / 2}px`);
       }
+    },
+    cursorShow() {
+      this.cursoractive = true;
+    },
+    cursorHide() {
+      this.cursoractive = false;
     },
     unscale() {
       if (!this.isTouchable) {
-        this.zoom = false;
-        this.transfromRotate = '';
-        this.transfromOrigin = '';
+        // this.zoom = false;
+        this.transformImageContainer = '';
+        // this.transfromOrigin = '';
       }
     },
     // wScroll() {
@@ -145,6 +160,20 @@ export default {
       this.isTouchable = false;
     }
   },
+  computed: {
+    s: function () {
+      return `transform: translate(calc(${this.ypos}px - 50%), calc(${this.xpos}px - 50%));`;
+      // transform: translate(96px, 192px);
+      // return `top:${this.xpos}px; left:${this.ypos}px;`;
+      // this.poscurs = `top:${e.clientY}px; left:${e.clientX}px;`;
+    },
+    // textCursorOut: function () {
+    //   return this.cursoractive === 'false';
+    // },
+    // textCursor: function () {
+    //   return this.cursoractive === 'true';
+    // },
+  },
 };
 </script>
 
@@ -170,6 +199,9 @@ export default {
     bottom: auto;
     transform: rotate(-90deg) translateX(calc(-50% + (11.5vh / 2)));
     white-space: nowrap;
+    &::after{
+      clip-path: circle(13vh at var(--xx, -100%) var(--yy, -100%));
+    }
 }
 .thin-red{
   margin-bottom: 8px;
@@ -214,7 +246,8 @@ export default {
 }
 .item-images {
     margin-left: 0;
-    padding-right: 13%;}
+    // padding-right: 13%;
+        transform: translateX(-13%);}
 }
 @media (max-width: 767px) {
 .item-image:nth-child(2){
